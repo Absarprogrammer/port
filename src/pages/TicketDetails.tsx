@@ -9,7 +9,8 @@ import {
   Tag,
   Edit2,
   Trash2,
-  Loader2
+  Loader2,
+  Building2
 } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import { useTicketContext } from '../context/TicketContext';
@@ -306,6 +307,20 @@ export default function TicketDetails() {
 
                 <div>
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <Building2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Department</span>
+                  </div>
+                  <span
+                    className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                  >
+                    {typeof currentTicket.department === 'object' && currentTicket.department !== null
+                      ? currentTicket.department.name
+                      : currentTicket.department || 'General IT'}
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <AlertTriangle className="w-4 h-4" />
                     <span className="text-sm font-medium">Priority</span>
                   </div>
@@ -339,8 +354,8 @@ export default function TicketDetails() {
                     <User className="w-4 h-4" />
                     <span className="text-sm font-medium">Created By</span>
                   </div>
-                  <p className="text-slate-900">{currentTicket.createdBy.name}</p>
-                  <p className="text-sm text-slate-500">{currentTicket.createdBy.email}</p>
+                  <p className="text-slate-900">{currentTicket.createdBy?.name || 'Unknown User'}</p>
+                  <p className="text-sm text-slate-500">{currentTicket.createdBy?.email}</p>
                 </div>
 
                 <div>
@@ -363,7 +378,7 @@ export default function TicketDetails() {
                       >
                         <option value="unassigned">Unassigned</option>
                         {supportAgents.map(agent => (
-                          <option key={agent._id} value={agent._id}>{agent.name} ({agent.email})</option>
+                          <option key={agent._id} value={agent._id}>{agent.name} &mdash; {agent.department?.name || 'General IT'}</option>
                         ))}
                       </select>
                     )

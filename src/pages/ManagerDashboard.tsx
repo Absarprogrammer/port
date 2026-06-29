@@ -356,6 +356,7 @@ export default function ManagerDashboard() {
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
+                    <option value="Critical">Critical</option>
                   </select>
                 </div>
               )}
@@ -391,7 +392,7 @@ export default function ManagerDashboard() {
                             </div>
                           </td>
                           <td className="px-4 py-4 text-sm text-slate-600">
-                            {ticket.createdBy.name}
+                            {ticket.createdBy?.name || 'Unknown User'}
                           </td>
                           <td className="px-4 py-4">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>

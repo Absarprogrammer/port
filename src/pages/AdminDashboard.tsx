@@ -505,6 +505,7 @@ export default function AdminDashboard() {
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
+                    <option value="Critical">Critical</option>
                   </select>
                 </div>
               )}
@@ -536,9 +537,9 @@ export default function AdminDashboard() {
                             <p className="font-medium text-slate-900">{ticket.title}</p>
                             <p className="text-xs text-slate-400">#{ticket._id.slice(-6).toUpperCase()}</p>
                           </td>
-                          <td className="px-4 py-4 text-sm text-slate-600">{ticket.createdBy.name}</td>
+                          <td className="px-4 py-4 text-sm text-slate-600">{ticket.createdBy?.name || 'Unknown User'}</td>
                           <td className="px-4 py-4 text-sm text-slate-600">
-                            {typeof ticket.department === 'object' ? ticket.department.name : ticket.department || '-'}
+                            {typeof ticket.department === 'object' && ticket.department !== null ? ticket.department.name : ticket.department || '-'}
                           </td>
                           <td className="px-4 py-4">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span>
@@ -826,7 +827,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 py-4 text-sm text-slate-600">
                             {dept.managerIds && dept.managerIds.length > 0
-                              ? dept.managerIds.map(m => m.name).join(', ')
+                              ? dept.managerIds.map(m => m?.name || 'Unknown').join(', ')
                               : <span className="text-slate-400">None</span>
                             }
                           </td>

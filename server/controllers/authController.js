@@ -81,7 +81,7 @@ const login = async (req, res) => {
     }
 
     // Find user and include password for comparison
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+password').populate('department', 'name');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -130,7 +130,7 @@ const login = async (req, res) => {
 // @access Private
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate('department', 'name');
     if (!user) {
       return res.status(404).json({
         success: false,

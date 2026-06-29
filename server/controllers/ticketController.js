@@ -29,6 +29,7 @@ const getMyTickets = async (req, res) => {
     const tickets = await Ticket.find(query)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
+      .populate('department', 'name')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -77,6 +78,7 @@ const getTickets = async (req, res) => {
     const tickets = await Ticket.find(query)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
+      .populate('department', 'name')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -101,6 +103,7 @@ const getTicket = async (req, res) => {
     const ticket = await Ticket.findById(req.params.id)
       .populate('createdBy', 'name email role')
       .populate('assignedTo', 'name email role')
+      .populate('department', 'name')
       .populate('comments.user', 'name role email')
       .populate('timeline.user', 'name role email');
 
@@ -318,6 +321,7 @@ const updateTicket = async (req, res) => {
     )
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
+      .populate('department', 'name')
       .populate('comments.user', 'name role email')
       .populate('timeline.user', 'name role email');
 
@@ -492,6 +496,7 @@ const addComment = async (req, res) => {
     const updatedTicket = await Ticket.findById(req.params.id)
       .populate('createdBy', 'name email role')
       .populate('assignedTo', 'name email role')
+      .populate('department', 'name')
       .populate('comments.user', 'name role email')
       .populate('timeline.user', 'name role email');
 

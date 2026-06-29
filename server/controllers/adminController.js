@@ -128,7 +128,8 @@ const updateTicketStatus = async (req, res) => {
       { new: true, runValidators: true }
     )
       .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email');
+      .populate('assignedTo', 'name email')
+      .populate('department', 'name');
 
     if (status === 'Resolved') {
       sendTicketResolvedEmail(updatedTicket.createdBy, updatedTicket).catch(console.error);
@@ -258,7 +259,8 @@ const assignTicket = async (req, res) => {
       { new: true, runValidators: true }
     )
       .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email');
+      .populate('assignedTo', 'name email')
+      .populate('department', 'name');
 
     if (previousAgentId && previousAgentId !== agent._id.toString()) {
       const previousAgent = await User.findById(previousAgentId);

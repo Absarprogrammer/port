@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Mail, Shield, Calendar, LogOut, Edit2 } from 'lucide-react';
+import { User, Mail, Shield, Calendar, LogOut, Building2 } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
 import { useAuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -70,6 +70,23 @@ export default function Profile() {
                 </span>
               </div>
             </div>
+
+            {/* Department — shown for roles that have one, or as General IT */}
+            {(user?.role === 'Manager' || user?.role === 'Support Agent' || user?.department) && (
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                <div className="p-3 bg-white rounded-lg shadow-sm">
+                  <Building2 className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Department</p>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    {typeof user?.department === 'object' && user?.department !== null
+                      ? user.department.name
+                      : 'General IT'}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
               <div className="p-3 bg-white rounded-lg shadow-sm">
