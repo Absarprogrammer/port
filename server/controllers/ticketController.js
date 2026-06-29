@@ -99,6 +99,10 @@ const getTickets = async (req, res) => {
 // @route  GET /api/tickets/:id
 // @access Private
 const getTicket = async (req, res) => {
+  console.log("===== GET TICKET DEBUG =====");
+  console.log("User:", req.user);
+  console.log("Ticket ID:", req.params.id);
+
   try {
     const ticket = await Ticket.findById(req.params.id)
       .populate('createdBy', 'name email role')
@@ -114,18 +118,43 @@ const getTicket = async (req, res) => {
       });
     }
 
+    console.log("Ticket:", ticket);
+    console.log("CreatedBy:", ticket.createdBy);
+    console.log("AssignedTo:", ticket.assignedTo);
+    console.log("Department:", ticket.department);
+
     // Check authorization
-    if (req.user.role === 'Employee' && ticket.createdBy._id.toString() !== req.user.id) {
+    if (req.user.role === 'Employee' && ticket.createdBy._id.toString() !== req.user.id.toString()) {
+      console.log("403 triggered here");
+      console.log("Employee check failed");
+      console.log({
+        userId: req.user.id.toString(),
+        createdBy: ticket.createdBy._id.toString()
+      });
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this ticket'
       });
     }
-    if (req.user.role === 'Support Agent' && ticket.assignedTo?._id.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to access this ticket'
-      });
+    if (req.user.role === 'Support Agent') {
+      // assignedTo is populated (object with _id) — compare both as strings
+      const assignedId = ticket.assignedTo?._id
+        ? ticket.assignedTo._id.toString()
+        : ticket.assignedTo?.toString(); // fallback if not populated
+
+      if (!assignedId || assignedId !== req.user.id.toString()) {
+        console.log("403 triggered here");
+        console.log("Support Agent check failed");
+        console.log({
+          userId: req.user.id.toString(),
+          assignedTo: assignedId,
+          rawAssignedTo: ticket.assignedTo
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to access this ticket'
+        });
+      }
     }
 
     res.status(200).json({
@@ -238,7 +267,7 @@ const updateTicket = async (req, res) => {
         message: 'Not authorized to update this ticket'
       });
     }
-    if (req.user.role === 'Support Agent' && ticket.assignedTo?.toString() !== req.user.id) {
+    if (req.user.role === 'Support Agent' && ticket.assignedTo?.toString() !== req.user.id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this ticket'
@@ -481,7 +510,7 @@ const addComment = async (req, res) => {
     if (req.user.role === 'Employee' && ticket.createdBy.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
-    if (req.user.role === 'Support Agent' && ticket.assignedTo?.toString() !== req.user.id) {
+    if (req.user.role === 'Support Agent' && ticket.assignedTo?.toString() !== req.user.id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 

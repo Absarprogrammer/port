@@ -309,17 +309,73 @@ const deleteUser = async (req, res) => {
       });
     }
 
+    // Prevent deleting the last remaining Admin
+    if (user.role === 'Admin') {
+      const adminCount = await User.countDocuments({ role: 'Admin' });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot delete the last remaining Admin account'
+        });
+      }
+    }
+
+    // If user is a Manager, remove from department's managerIds
+    if (user.role === 'Manager' && user.department) {
+      const Department = require('../models/Department');
+      await Department.findByIdAndUpdate(user.department, { $pull: { managerIds: user._id } });
+    }
+
+    // Clear assignedTo references on tickets assigned to this user
+    await Ticket.updateMany(
+      { assignedTo: user._id },
+      { $set: { assignedTo: null, assignedBy: null, assignedAt: null } }
+    );
+
+    // Note: tickets created by this user (createdBy) are intentionally preserved.
+    // The createdBy ObjectId remains as a historical reference.
+
     await user.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: 'User deleted successfully'
+      message: `User "${user.name}" deleted successfully`
     });
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error while deleting user'
+    });
+  }
+};
+
+// @desc   Delete ticket
+// @route  DELETE /api/admin/tickets/:id
+// @access Private (Admin only)
+const deleteTicket = async (req, res) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found'
+      });
+    }
+
+    // Permanently delete the ticket (comments & timeline are embedded, deleted automatically)
+    await ticket.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: `Ticket #${req.params.id.slice(-6).toUpperCase()} deleted successfully`
+    });
+  } catch (error) {
+    console.error('Delete ticket error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting ticket'
     });
   }
 };
@@ -536,6 +592,7 @@ module.exports = {
   updateTicketStatus,
   assignTicket,
   deleteUser,
+  deleteTicket,
   updateUserRole,
   getStats
 };

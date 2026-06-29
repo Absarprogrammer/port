@@ -85,6 +85,11 @@ const adminService = {
     const response = await api.put(`/admin/tickets/${ticketId}/assign`, { assignedTo });
     return response.data;
   },
+
+  async deleteTicket(ticketId: string): Promise<{ success: boolean; message: string }> {
+    const response = await api.delete(`/admin/tickets/${ticketId}`);
+    return response.data;
+  },
 };
 
 export default adminService;

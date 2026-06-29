@@ -43,6 +43,13 @@ export default function AdminDashboard() {
   const [updatingTicketId, setUpdatingTicketId] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
+  // Delete state
+  const [deleteUserModal, setDeleteUserModal] = useState<{ open: boolean; user: User | null }>({ open: false, user: null });
+  const [deleteTicketModal, setDeleteTicketModal] = useState<{ open: boolean; ticket: TicketType | null }>({ open: false, ticket: null });
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
   // User role+dept change state
   const [editingUser, setEditingUser] = useState<{ id: string; role: string; department: string } | null>(null);
 
@@ -155,6 +162,45 @@ export default function AdminDashboard() {
       alert(error.response?.data?.message || 'Failed to update user');
     } finally {
       setUpdatingUserId(null);
+    }
+  };
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUserModal.user) return;
+    setDeletingUserId(deleteUserModal.user._id);
+    try {
+      const res = await adminService.deleteUser(deleteUserModal.user._id);
+      setUsers(users.filter(u => u._id !== deleteUserModal.user!._id));
+      setDeleteUserModal({ open: false, user: null });
+      fetchStats();
+      showToast(res.message || 'User deleted successfully');
+    } catch (error: any) {
+      setDeleteUserModal({ open: false, user: null });
+      showToast(error.response?.data?.message || 'Failed to delete user', 'error');
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
+  const handleDeleteTicket = async () => {
+    if (!deleteTicketModal.ticket) return;
+    setDeletingTicketId(deleteTicketModal.ticket._id);
+    try {
+      const res = await adminService.deleteTicket(deleteTicketModal.ticket._id);
+      setTickets(tickets.filter(t => t._id !== deleteTicketModal.ticket!._id));
+      setDeleteTicketModal({ open: false, ticket: null });
+      fetchStats();
+      showToast(res.message || 'Ticket deleted successfully');
+    } catch (error: any) {
+      setDeleteTicketModal({ open: false, ticket: null });
+      showToast(error.response?.data?.message || 'Failed to delete ticket', 'error');
+    } finally {
+      setDeletingTicketId(null);
     }
   };
 
@@ -278,6 +324,109 @@ export default function AdminDashboard() {
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Toast Notification */}
+        {toast && (
+          <div
+            className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl text-white text-sm font-medium transition-all ${
+              toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            )}
+            {toast.message}
+          </div>
+        )}
+
+        {/* Delete User Confirmation Modal */}
+        {deleteUserModal.open && deleteUserModal.user && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !deletingUserId && setDeleteUserModal({ open: false, user: null })} />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-slate-900">Delete User</h3>
+                  <p className="mt-1.5 text-sm text-slate-600">
+                    Are you sure you want to delete{' '}
+                    <span className="font-semibold text-slate-900">{deleteUserModal.user.name}</span>?
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">This action cannot be undone.</p>
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteUserModal({ open: false, user: null })}
+                  disabled={!!deletingUserId}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteUser}
+                  disabled={!!deletingUserId}
+                  id="confirm-delete-user-btn"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors"
+                >
+                  {deletingUserId ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</>
+                  ) : (
+                    <><Trash2 className="w-4 h-4" /> Delete</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Ticket Confirmation Modal */}
+        {deleteTicketModal.open && deleteTicketModal.ticket && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !deletingTicketId && setDeleteTicketModal({ open: false, ticket: null })} />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-slate-900">Delete Ticket</h3>
+                  <p className="mt-1.5 text-sm text-slate-600">
+                    Ticket{' '}
+                    <span className="font-mono font-semibold text-slate-900">#{deleteTicketModal.ticket._id.slice(-6).toUpperCase()}</span>{' '}
+                    will be permanently deleted.
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">This action cannot be undone.</p>
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteTicketModal({ open: false, ticket: null })}
+                  disabled={!!deletingTicketId}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteTicket}
+                  disabled={!!deletingTicketId}
+                  id="confirm-delete-ticket-btn"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60 transition-colors"
+                >
+                  {deletingTicketId ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</>
+                  ) : (
+                    <><Trash2 className="w-4 h-4" /> Delete</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
@@ -562,7 +711,21 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 py-4 text-sm text-slate-600">{ticket.assignedTo?.name || 'Unassigned'}</td>
                           <td className="px-4 py-4">
-                            <Link to={`/tickets/${ticket._id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">View</Link>
+                            <div className="flex items-center gap-3">
+                              <Link to={`/tickets/${ticket._id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">View</Link>
+                              <button
+                                onClick={() => setDeleteTicketModal({ open: true, ticket })}
+                                disabled={deletingTicketId === ticket._id}
+                                id={`delete-ticket-${ticket._id}`}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                title="Delete ticket"
+                              >
+                                {deletingTicketId === ticket._id
+                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  : <Trash2 className="w-4 h-4" />
+                                }
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -704,14 +867,35 @@ export default function AdminDashboard() {
                                 >
                                   Cancel
                                 </button>
+                                <button
+                                  onClick={() => { setEditingUser(null); setDeleteUserModal({ open: true, user: u }); }}
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete user"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => { fetchDepartments(); startEditUser(u); }}
-                                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                              >
-                                <Edit2 className="w-3 h-3" /> Edit
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => { fetchDepartments(); startEditUser(u); }}
+                                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                >
+                                  <Edit2 className="w-3 h-3" /> Edit
+                                </button>
+                                <button
+                                  onClick={() => setDeleteUserModal({ open: true, user: u })}
+                                  disabled={deletingUserId === u._id}
+                                  id={`delete-user-${u._id}`}
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                  title="Delete user"
+                                >
+                                  {deletingUserId === u._id
+                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                    : <Trash2 className="w-4 h-4" />
+                                  }
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>

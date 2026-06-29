@@ -5,6 +5,7 @@ const {
   updateTicketStatus,
   assignTicket,
   deleteUser,
+  deleteTicket,
   updateUserRole,
   getStats
 } = require('../controllers/adminController');
@@ -25,5 +26,8 @@ router.route('/tickets/:id/assign').put(authorize('Admin', 'Manager'), assignTic
 router.route('/users').get(authorize('Admin', 'Manager'), getUsers);
 router.route('/users/:id/role').put(authorize('Admin'), updateUserRole);
 router.route('/users/:id').delete(authorize('Admin'), deleteUser);
+
+// Ticket deletion is Admin only
+router.route('/tickets/:id').delete(authorize('Admin'), deleteTicket);
 
 module.exports = router;
